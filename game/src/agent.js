@@ -153,7 +153,16 @@ async function work(job, resume) {
   try {
     await gather(job.item, job.quantity, Date.now() + WORK_TIMEOUT_MS);
     bot.chat(`Got ${job.quantity} ${job.item}, delivering to ${job.x} ${job.y} ${job.z}`);
-    await deliver(job);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await deliver(job);
+        break;
+      } catch (e) {
+        if (attempt >= 3) throw e;
+        log(`delivery attempt ${attempt} failed: ${e.message}; retrying`);
+        await gather(job.item, job.quantity, Date.now() + WORK_TIMEOUT_MS); // top up if anything was lost
+      }
+    }
     bot.chat(`!done ${job.id}`);
   } catch (e) {
     log(`job #${job.id} failed: ${e.message}`);
