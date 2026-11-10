@@ -34,7 +34,7 @@ export function parseExact(text) {
 }
 
 /**
- * Parse a hiring request. Exact syntax skips the model; anything else goes to Claude with a
+ * Parse a hiring request. Exact syntax skips the model; anything else goes to the LLM with a
  * schema-constrained answer, then is validated again here (the model never decides funds:
  * the bounty still has to be confirmed by the player and paid from their own wallet).
  */

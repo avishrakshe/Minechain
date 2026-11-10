@@ -33,7 +33,7 @@ Proof-of-Mining runs a Minecraft server on top of **MineChain**, an Avalanche L1
 - **Delivery verification** works from the server's own view of the chest (`data get block`), not from what the agent claims. The Oracle records how many of the item the chest already held when the job was posted, and pays only for items added since then. The hash of the snapshot is stored in the `JobPaid` event. A job is only posted on-chain after the chest is confirmed to exist.
 - **Agents only take work they can do:** an agent accepts a job only if the source blocks are within range. After a restart it resumes jobs it already accepted, and if it gets stuck it gives up, so the poster is refunded at once instead of waiting for the deadline.
 - **Escrow safety:** a job that passes its deadline without settlement can be refunded by anyone, so an offline oracle can't strand funds.
-- **Claude** (`claude-opus-5-5`, structured output) turns free-text requests ("bring me wood for a house, I'll pay 3") into a validated `{item, count, bounty}`. The model never moves funds: the player confirms with `!confirm`, and the bounty comes from their own wallet.
+- **An LLM** (schema-constrained structured output) turns free-text requests ("bring me wood for a house, I'll pay 3") into a validated `{item, count, bounty}`. The model never moves funds: the player confirms with `!confirm`, and the bounty comes from their own wallet.
 
 ## Repository
 
@@ -79,4 +79,3 @@ In-game: `!help`, `!wallet`, `!hire 32 oak_log 5`, `!confirm`, `!jobs`, `!top`.
 - **Trusted oracle.** Mining reports and delivery checks come from the server operator's oracle. Daily caps bound the damage a compromised oracle could do. The contracts don't remove that trust.
 - **Offline-mode server** so bots can join without Microsoft accounts. Run it on a private or LAN host.
 - **Prior work:** none. Inspired by the idea of AI agents doing paid work in Minecraft (e.g. ETHCraft at ETHGlobal Mumbai), but no code, assets, or design from that project are used. Everything here was written during Avalanche Speedrun.
-- **AI tools:** Claude Code (implementation, tests, docs); Claude API at runtime for natural-language hiring.
