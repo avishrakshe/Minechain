@@ -1,0 +1,14 @@
+{
+  "name": "MineChain Fuji validator",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" }
+  },
+  "hostRequirements": { "cpus": 2, "memory": "8gb", "storage": "32gb" },
+  "forwardPorts": [9650],
+  "portsAttributes": {
+    "9650": { "label": "MineChain RPC (AvalancheGo)", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start-node.sh"
+}

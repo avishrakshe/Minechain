@@ -16,6 +16,8 @@ args=(
   --chain-config-dir="$ROOT/chain-configs"
   --http-host=127.0.0.1
   --http-port=9650
+  # Behind a port forwarder (e.g. Codespaces' public URL) requests arrive with a non-localhost Host header.
+  --http-allowed-hosts=*
   --staking-port=9651
   # UDP DNS to OpenDNS doesn't leave WSL's NAT; the HTTP-based lookup does.
   --public-ip-resolution-service=ifconfigCo
