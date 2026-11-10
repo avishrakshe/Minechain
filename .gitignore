@@ -6,3 +6,4 @@ contracts/typechain-types/
 *.env.local
 deployments/hardhat.json
 server-data/
+game/data/
