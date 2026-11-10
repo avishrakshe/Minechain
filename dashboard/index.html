@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MineChain Explorer</title>
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --surface-1: #fcfcfb;
+    --border: #e2e1dc;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #77766f;
+    --accent: #2a62d6;
+    --good: #0ca30c;      --good-text: #006300;
+    --warning: #fab219;   --warning-text: #7a5200;
+    --neutral: #8c8b84;
+    --critical: #d03b3b;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121211; --surface-1: #1a1a19; --border: #2e2e2c;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
+      --accent: #7aa2f7; --good-text: #0ca30c; --warning-text: #fab219;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121211; --surface-1: #1a1a19; --border: #2e2e2c;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
+    --accent: #7aa2f7; --good-text: #0ca30c; --warning-text: #fab219;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; }
+  h1 small { font-weight: 400; color: var(--text-secondary); font-size: 14px; margin-left: 8px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+  .meta { color: var(--text-secondary); font-size: 13px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--neutral); margin-right: 6px; }
+  .dot.live { background: var(--good); }
+  .dot.down { background: var(--critical); }
+  button.theme { background: none; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr); gap: 16px; margin-bottom: 16px; }
+  .hero .value { font-size: 52px; font-weight: 650; line-height: 1.1; letter-spacing: -0.01em; }
+  .hero .value span { font-size: 22px; font-weight: 500; color: var(--text-secondary); margin-left: 6px; }
+  .label { color: var(--text-secondary); font-size: 13px; }
+  .sub { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .tile .value { font-size: 28px; font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); }
+  .badge i { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+  .s-open i { background: var(--neutral); }
+  .s-accepted i { background: var(--warning); color: #0b0b0b; }
+  .s-paid i { background: var(--good); }
+  .s-refunded i { background: var(--neutral); }
+  .empty { color: var(--text-muted); font-size: 14px; padding: 12px 0; }
+  .err { color: var(--critical); font-size: 14px; margin-bottom: 16px; display: none; }
+  footer { color: var(--text-muted); font-size: 12px; margin-top: 24px; }
+  @media (max-width: 760px) {
+    .hero, .grid2 { grid-template-columns: minmax(0, 1fr); }
+    .hero .value { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>MineChain <small>Proof-of-Mining on an Avalanche L1</small></h1>
+    <div class="meta">
+      <span id="status"><span class="dot"></span>connecting…</span>
+      <span id="chain"></span>
+      <button class="theme" id="themeBtn" type="button">Theme</button>
+    </div>
+  </header>
+
+  <div class="err" id="err"></div>
+
+  <section class="hero">
+    <div class="card">
+      <div class="label">ORE minted by mining</div>
+      <div class="value" id="minted">–<span>ORE</span></div>
+      <div class="sub">Native gas created only by MiningRewards via the NativeMinter precompile</div>
+    </div>
+    <div class="tiles">
+      <div class="card tile"><div class="label">Jobs posted</div><div class="value" id="jobs">–</div></div>
+      <div class="card tile"><div class="label">Jobs paid to agents</div><div class="value" id="paid">–</div></div>
+      <div class="card tile"><div class="label">Registered AI agents</div><div class="value" id="agents">–</div></div>
+      <div class="card tile"><div class="label">Latest block</div><div class="value" id="block">–</div></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Recent mining rewards</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Block</th><th>Player wallet</th><th>Ore mined</th><th class="num">Count</th><th class="num">Reward</th></tr></thead>
+        <tbody id="mintRows"></tbody>
+      </table></div>
+      <div class="empty" id="mintEmpty" hidden>No mining rewards yet.</div>
+    </div>
+    <div class="card">
+      <h2>Miner leaderboard</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>Player wallet</th><th class="num">Blocks</th><th class="num">ORE earned</th></tr></thead>
+        <tbody id="boardRows"></tbody>
+      </table></div>
+      <div class="empty" id="boardEmpty" hidden>No miners yet.</div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <h2>Jobs</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Job</th><th>Status</th><th>Item</th><th class="num">Qty</th><th class="num">Bounty</th><th>Agent</th><th>Chest</th></tr></thead>
+      <tbody id="jobRows"></tbody>
+    </table></div>
+    <div class="empty" id="jobEmpty" hidden>No jobs posted yet.</div>
+  </section>
+
+  <section class="card">
+    <h2>AI agent reputation</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Agent</th><th>Wallet</th><th class="num">Completed</th><th class="num">Failed</th><th class="num">ORE earned</th></tr></thead>
+      <tbody id="agentRows"></tbody>
+    </table></div>
+    <div class="empty" id="agentEmpty" hidden>No agents registered yet.</div>
+  </section>
+
+  <footer id="footer">Reads MineChain directly over RPC. Refreshes every 10 seconds.</footer>
+</main>
+
+<script type="module">
+import { createPublicClient, http, defineChain, parseAbi, formatEther, keccak256, toHex } from "https://cdn.jsdelivr.net/npm/viem@2.21.55/+esm";
+
+// Theme toggle: remembered per viewer; page renders fine without storage.
+const root = document.documentElement;
+try { const t = localStorage.getItem("mc-theme"); if (t) root.dataset.theme = t; } catch {}
+document.getElementById("themeBtn").onclick = () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("mc-theme", root.dataset.theme); } catch {}
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const compact = (n) => Intl.NumberFormat("en", { notation: n >= 10000 ? "compact" : "standard", maximumFractionDigits: 2 }).format(n);
+const ore = (wei) => compact(Number(formatEther(wei)));
+
+const cfg = await fetch("./config.json", { cache: "no-store" }).then((r) => r.json());
+const chain = defineChain({
+  id: cfg.chainId, name: "MineChain",
+  nativeCurrency: { name: "ORE", symbol: "ORE", decimals: 18 },
+  rpcUrls: { default: { http: [cfg.rpcUrl] } },
+});
+const client = createPublicClient({ chain, transport: http(cfg.rpcUrl) });
+const addrLink = (a) => cfg.explorerUrl ? `<a class="mono" href="${esc(cfg.explorerUrl)}/address/${a}" target="_blank" rel="noopener">${short(a)}</a>` : `<span class="mono" title="${a}">${short(a)}</span>`;
+
+const rewardsAbi = parseAbi([
+  "function totalMinted() view returns (uint256)",
+  "event Mined(bytes32 indexed reportId, address indexed player, bytes32 indexed blockType, uint256 count, uint256 reward)",
+]);
+const escrowAbi = parseAbi([
+  "function jobCount() view returns (uint256)",
+  "function getJob(uint256) view returns ((address poster, address agent, uint96 bounty, uint32 quantity, uint64 deadline, uint8 status, int32 x, int32 y, int32 z, string item))",
+]);
+const registryAbi = parseAbi([
+  "function agentCount() view returns (uint256)",
+  "function agentList(uint256) view returns (address)",
+  "function getAgent(address) view returns ((string name, address operator, uint64 registeredAt, uint32 completed, uint32 failed, uint256 earned))",
+]);
+const blockNames = new Map(cfg.blocks.map((b) => [keccak256(toHex(b)), b]));
+const STATUS = [
+  null,
+  { cls: "s-open", icon: "•", label: "Open" },
+  { cls: "s-accepted", icon: "…", label: "In progress" },
+  { cls: "s-paid", icon: "✓", label: "Paid" },
+  { cls: "s-refunded", icon: "↩", label: "Refunded" },
+];
+
+async function refresh() {
+  const c = cfg.contracts;
+  const [block, minted, jobCount, agentCount] = await Promise.all([
+    client.getBlockNumber(),
+    client.readContract({ address: c.MiningRewards, abi: rewardsAbi, functionName: "totalMinted" }),
+    client.readContract({ address: c.JobEscrow, abi: escrowAbi, functionName: "jobCount" }),
+    client.readContract({ address: c.AgentRegistry, abi: registryAbi, functionName: "agentCount" }),
+  ]);
+
+  // Agents first, so jobs can show agent names.
+  const agents = await Promise.all(Array.from({ length: Number(agentCount) }, async (_, i) => {
+    const addr = await client.readContract({ address: c.AgentRegistry, abi: registryAbi, functionName: "agentList", args: [BigInt(i)] });
+    return { addr, ...(await client.readContract({ address: c.AgentRegistry, abi: registryAbi, functionName: "getAgent", args: [addr] })) };
+  }));
+  const agentName = new Map(agents.map((a) => [a.addr.toLowerCase(), a.name]));
+
+  const jobs = await Promise.all(Array.from({ length: Number(jobCount) }, (_, i) =>
+    client.readContract({ address: c.JobEscrow, abi: escrowAbi, functionName: "getJob", args: [BigInt(i)] }).then((j) => ({ id: i, ...j }))));
+
+  const logs = await client.getLogs({ address: c.MiningRewards, event: rewardsAbi[1], fromBlock: BigInt(cfg.fromBlock ?? 0), toBlock: block });
+
+  $("minted").innerHTML = `${ore(minted)}<span>ORE</span>`;
+  $("jobs").textContent = compact(Number(jobCount));
+  $("paid").textContent = compact(jobs.filter((j) => j.status === 3).length);
+  $("agents").textContent = compact(Number(agentCount));
+  $("block").textContent = compact(Number(block));
+  $("chain").textContent = `chain ${cfg.chainId}${cfg.network ? " · " + cfg.network : ""}`;
+
+  const recent = [...logs].reverse().slice(0, 12);
+  $("mintRows").innerHTML = recent.map((l) => `<tr>
+    <td class="num">${l.blockNumber}</td><td>${addrLink(l.args.player)}</td>
+    <td>${esc(blockNames.get(l.args.blockType) ?? "unknown")}</td>
+    <td class="num">${l.args.count}</td><td class="num">${ore(l.args.reward)} ORE</td></tr>`).join("");
+  $("mintEmpty").hidden = recent.length > 0;
+
+  const board = new Map();
+  for (const l of logs) {
+    const k = l.args.player;
+    const e = board.get(k) ?? { blocks: 0n, wei: 0n };
+    e.blocks += l.args.count; e.wei += l.args.reward;
+    board.set(k, e);
+  }
+  const ranked = [...board].sort((a, b) => (b[1].wei > a[1].wei ? 1 : b[1].wei < a[1].wei ? -1 : 0)).slice(0, 10);
+  $("boardRows").innerHTML = ranked.map(([a, e], i) => `<tr><td class="num">${i + 1}</td><td>${addrLink(a)}</td>
+    <td class="num">${e.blocks}</td><td class="num">${ore(e.wei)}</td></tr>`).join("");
+  $("boardEmpty").hidden = ranked.length > 0;
+
+  $("jobRows").innerHTML = [...jobs].reverse().map((j) => {
+    const s = STATUS[j.status] ?? { cls: "", icon: "?", label: "Unknown" };
+    const agent = j.agent === "0x0000000000000000000000000000000000000000" ? "–" : esc(agentName.get(j.agent.toLowerCase()) ?? short(j.agent));
+    return `<tr><td class="num">#${j.id}</td><td><span class="badge ${s.cls}"><i aria-hidden="true">${s.icon}</i>${s.label}</span></td>
+      <td>${esc(j.item)}</td><td class="num">${j.quantity}</td><td class="num">${ore(j.bounty)} ORE</td>
+      <td>${agent}</td><td class="mono">${j.x}, ${j.y}, ${j.z}</td></tr>`;
+  }).join("");
+  $("jobEmpty").hidden = jobs.length > 0;
+
+  $("agentRows").innerHTML = agents.sort((a, b) => b.completed - a.completed).map((a) => `<tr>
+    <td>${esc(a.name)}</td><td>${addrLink(a.addr)}</td><td class="num">${a.completed}</td>
+    <td class="num">${a.failed}</td><td class="num">${ore(a.earned)}</td></tr>`).join("");
+  $("agentEmpty").hidden = agents.length > 0;
+
+  $("status").innerHTML = `<span class="dot live"></span>live · updated ${new Date().toLocaleTimeString()}`;
+  $("err").style.display = "none";
+}
+
+async function loop() {
+  try { await refresh(); }
+  catch (e) {
+    $("status").innerHTML = `<span class="dot down"></span>RPC unreachable`;
+    $("err").textContent = `Can't read MineChain at ${cfg.rpcUrl}: ${e.shortMessage ?? e.message}`;
+    $("err").style.display = "block";
+  }
+  setTimeout(loop, 10_000);
+}
+loop();
+</script>
+</body>
+</html>

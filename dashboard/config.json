@@ -1,0 +1,31 @@
+{
+  "network": "",
+  "chainId": 777333,
+  "rpcUrl": "http://127.0.0.1:9654/ext/bc/2UcbeFnWZh9f4pkNfEQEz71q7WdNThTQg7nyz4A39BRg4xqJbr/rpc",
+  "explorerUrl": "local",
+  "fromBlock": 0,
+  "contracts": {
+    "MiningRewards": "0xa7a4a6dc9965dee3899826c2e8e4de12ea317865",
+    "AgentRegistry": "0x9b324ac6c6e02ca3c3a8ccccf032edc08d8318ab",
+    "JobEscrow": "0xae10f3f8d26a0eaffc880f53112948fb09926c65"
+  },
+  "blocks": [
+    "coal_ore",
+    "deepslate_coal_ore",
+    "copper_ore",
+    "deepslate_copper_ore",
+    "iron_ore",
+    "deepslate_iron_ore",
+    "redstone_ore",
+    "deepslate_redstone_ore",
+    "lapis_ore",
+    "deepslate_lapis_ore",
+    "gold_ore",
+    "deepslate_gold_ore",
+    "diamond_ore",
+    "deepslate_diamond_ore",
+    "emerald_ore",
+    "deepslate_emerald_ore",
+    "ancient_debris"
+  ]
+}
