@@ -1,5 +1,5 @@
 import hre from "hardhat";
-import { keccak256, parseEther, toHex, getAddress, type Address } from "viem";
+import { keccak256, parseEther, toHex, getAddress, defineChain, type Address } from "viem";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -11,8 +11,19 @@ const ALLOW_LIST_ABI = [
 
 async function main() {
   const net = hre.network.name;
-  const publicClient = await hre.viem.getPublicClient();
-  const [deployer] = await hre.viem.getWalletClients();
+  // hardhat-viem only knows chains bundled with viem; describe MineChain explicitly.
+  const chain =
+    net === "minechain"
+      ? defineChain({
+          id: Number(process.env.MINECHAIN_CHAIN_ID ?? 777333),
+          name: "MineChain",
+          nativeCurrency: { name: "ORE", symbol: "ORE", decimals: 18 },
+          rpcUrls: { default: { http: [(hre.network.config as { url: string }).url] } },
+        })
+      : undefined;
+  const publicClient = await hre.viem.getPublicClient(chain ? { chain } : undefined);
+  const [deployer] = await hre.viem.getWalletClients(chain ? { chain } : undefined);
+  const client = { public: publicClient, wallet: deployer };
   const chainId = await publicClient.getChainId();
   const gameMaster = getAddress((process.env.GAME_MASTER_ADDRESS ?? deployer.account.address) as Address);
 
@@ -23,14 +34,14 @@ async function main() {
 
   console.log(`network=${net} chainId=${chainId} deployer=${deployer.account.address} gameMaster=${gameMaster}`);
 
-  const rewards = await hre.viem.deployContract("MiningRewards", [parseEther(cfg.dailyCapOre)]);
+  const rewards = await hre.viem.deployContract("MiningRewards", [parseEther(cfg.dailyCapOre)], { client });
   console.log("MiningRewards", rewards.address);
   await wait(publicClient, await rewards.write.setGameMaster([gameMaster, true]));
   await wait(publicClient, await rewards.write.setRates([types, amounts]));
 
-  const registry = await hre.viem.deployContract("AgentRegistry");
+  const registry = await hre.viem.deployContract("AgentRegistry", [], { client });
   console.log("AgentRegistry", registry.address);
-  const escrow = await hre.viem.deployContract("JobEscrow", [registry.address]);
+  const escrow = await hre.viem.deployContract("JobEscrow", [registry.address], { client });
   console.log("JobEscrow", escrow.address);
   await wait(publicClient, await registry.write.setEscrow([escrow.address]));
   await wait(publicClient, await escrow.write.setVerifier([gameMaster, true]));
