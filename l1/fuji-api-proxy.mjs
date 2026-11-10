@@ -22,7 +22,8 @@ function send(target, req, body) {
         port: target.port,
         path: req.url,
         method: req.method,
-        headers: { ...req.headers, host: target.host, "content-length": Buffer.byteLength(body) },
+        // Ask for an uncompressed response: the fallback check reads the body text.
+        headers: { ...req.headers, host: target.host, "content-length": Buffer.byteLength(body), "accept-encoding": "identity" },
       },
       (res) => {
         const chunks = [];
