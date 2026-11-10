@@ -1,0 +1,20 @@
+{
+  "_comment": "Items AI agents can deliver, mapped to the blocks they break to obtain them.",
+  "items": {
+    "oak_log": ["oak_log"],
+    "birch_log": ["birch_log"],
+    "spruce_log": ["spruce_log"],
+    "jungle_log": ["jungle_log"],
+    "acacia_log": ["acacia_log"],
+    "dark_oak_log": ["dark_oak_log"],
+    "cherry_log": ["cherry_log"],
+    "cobblestone": ["stone", "cobblestone"],
+    "dirt": ["dirt", "grass_block"],
+    "sand": ["sand"],
+    "gravel": ["gravel"],
+    "clay_ball": ["clay"],
+    "coal": ["coal_ore", "deepslate_coal_ore"],
+    "raw_iron": ["iron_ore", "deepslate_iron_ore"],
+    "raw_copper": ["copper_ore", "deepslate_copper_ore"]
+  }
+}

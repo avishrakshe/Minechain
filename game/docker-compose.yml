@@ -1,0 +1,24 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server:java21
+    container_name: pom-minecraft
+    ports:
+      - "25565:25565"
+      - "127.0.0.1:25575:25575" # RCON, local only
+    environment:
+      EULA: "TRUE"
+      TYPE: VANILLA
+      VERSION: "1.21.11"
+      # Offline mode lets the AI agent bots join without Microsoft accounts. Run on a private/LAN host.
+      ONLINE_MODE: "FALSE"
+      ENFORCE_SECURE_PROFILE: "FALSE"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: ${RCON_PASSWORD:?set RCON_PASSWORD in game/.env}
+      MODE: survival
+      DIFFICULTY: peaceful
+      SPAWN_PROTECTION: "0"
+      MOTD: "Proof-of-Mining - mine blocks, mint gas on MineChain"
+      MEMORY: 3G
+    volumes:
+      - ./server-data:/data
+    restart: unless-stopped
