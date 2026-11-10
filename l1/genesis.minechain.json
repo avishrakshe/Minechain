@@ -1,0 +1,42 @@
+{
+    "config":  {
+                   "chainId":  777333,
+                   "feeConfig":  {
+                                     "gasLimit":  15000000,
+                                     "targetBlockRate":  2,
+                                     "minBaseFee":  25000000000,
+                                     "targetGas":  20000000,
+                                     "baseFeeChangeDenominator":  36,
+                                     "minBlockGasCost":  0,
+                                     "maxBlockGasCost":  1000000,
+                                     "blockGasCostStep":  200000
+                                 },
+                   "contractNativeMinterConfig":  {
+                                                      "blockTimestamp":  0,
+                                                      "adminAddresses":  [
+                                                                             "0xaA6733bfC1c38ed3DABb6e9081053633d019aA69"
+                                                                         ]
+                                                  },
+                   "contractDeployerAllowListConfig":  {
+                                                           "blockTimestamp":  0,
+                                                           "adminAddresses":  [
+                                                                                  "0xaA6733bfC1c38ed3DABb6e9081053633d019aA69"
+                                                                              ]
+                                                       }
+               },
+    "alloc":  {
+                  "aa6733bfc1c38ed3dabb6e9081053633d019aa69":  {
+                                                                   "balance":  "0x3635C9ADC5DEA00000"
+                                                               }
+              },
+    "nonce":  "0x0",
+    "timestamp":  "0x0",
+    "extraData":  "0x",
+    "gasLimit":  "0xE4E1C0",
+    "difficulty":  "0x0",
+    "mixHash":  "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "coinbase":  "0x0000000000000000000000000000000000000000",
+    "number":  "0x0",
+    "gasUsed":  "0x0",
+    "parentHash":  "0x0000000000000000000000000000000000000000000000000000000000000000"
+}

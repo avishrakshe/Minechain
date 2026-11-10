@@ -1,8 +1,16 @@
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox-viem";
 
-const pk = process.env.DEPLOYER_PRIVATE_KEY;
-const accounts = pk ? [pk] : [];
+import { config as loadEnv } from "dotenv";
+loadEnv({ path: "../game/.env" });
+
+// Deployer = game master = account 0 of GAME_MNEMONIC (same derivation as game/src/chain.js).
+const mnemonic = process.env.GAME_MNEMONIC;
+const accounts = mnemonic
+  ? { mnemonic, path: "m/44'/60'/0'/0", initialIndex: 0, count: 1 }
+  : process.env.DEPLOYER_PRIVATE_KEY
+    ? [process.env.DEPLOYER_PRIVATE_KEY]
+    : [];
 
 const config: HardhatUserConfig = {
   solidity: {
