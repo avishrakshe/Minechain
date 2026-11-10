@@ -186,9 +186,11 @@ function startBot() {
   });
   bot.on("playerJoined", async (p) => {
     if (agentNames.has(p.username.toLowerCase())) {
-      await con.send(`give ${p.username} iron_pickaxe`);
-      await con.send(`give ${p.username} iron_axe`);
-      await con.send(`give ${p.username} iron_shovel`);
+      await new Promise((r) => setTimeout(r, 2000)); // let the entity spawn before reading its inventory
+      const inv = await con.inventory(p.username).catch(() => new Map());
+      for (const tool of ["iron_pickaxe", "iron_axe", "iron_shovel"]) {
+        if (!inv.get(tool)) await con.send(`give ${p.username} ${tool}`);
+      }
     }
   });
   bot.on("end", () => setTimeout(startBot, 5000));

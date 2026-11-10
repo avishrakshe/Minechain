@@ -56,6 +56,17 @@ export class Console {
     return { counts, raw, ok: true };
   }
 
+  /** Item totals in an online player's inventory. */
+  async inventory(player) {
+    const raw = await this.send(`data get entity ${player} Inventory`);
+    const totals = new Map();
+    for (const e of topLevelObjects(raw.slice(Math.max(0, raw.indexOf("["))))) {
+      const id = e.match(/id:\s*"minecraft:([a-z0-9_]+)"/)?.[1];
+      if (id) totals.set(id, (totals.get(id) ?? 0) + Number(e.match(/count:\s*(\d+)/)?.[1] ?? 1));
+    }
+    return totals;
+  }
+
   tell(player, text, color = "gold") {
     return this.send(`tellraw ${player} ${JSON.stringify([{ text: "[MineChain] ", color: "aqua" }, { text, color }])}`);
   }

@@ -84,24 +84,50 @@ async function gather(item, quantity, deadline) {
       const p = bot.entity.position;
       const dx = Math.round((Math.random() - 0.5) * 80), dz = Math.round((Math.random() - 0.5) * 80);
       bot.chat(`No ${item} nearby, exploring...`);
-      await bot.pathfinder.goto(new goals.GoalNearXZ(p.x + dx, p.z + dz, 4)).catch(() => {});
+      await withTimeout(bot.pathfinder.goto(new goals.GoalNearXZ(p.x + dx, p.z + dz, 4)), 60_000).catch(() => bot.pathfinder.stop());
       continue;
     }
-    const blocks = targets.map((v) => bot.blockAt(v)).filter(Boolean);
-    await bot.collectBlock.collect(blocks, { ignoreNoPath: true }).catch((e) => log("collect:", e.message));
-    log(`${item}: ${countOf(item)}/${quantity}`);
+    // One block per call with a hard timeout: an unreachable target (e.g. a log high in a tree)
+    // otherwise leaves collect() pending forever and the stall guard above never runs.
+    for (const v of targets) {
+      if (countOf(item) >= quantity) break;
+      const block = bot.blockAt(v);
+      if (!block || !blockIds.includes(block.type)) continue;
+      try {
+        await withTimeout(bot.collectBlock.collect(block, { ignoreNoPath: true }), COLLECT_TIMEOUT_MS);
+      } catch (e) {
+        log("collect:", e.message);
+        bot.collectBlock.cancelTask?.().catch?.(() => {});
+        bot.pathfinder.stop();
+      }
+      log(`${item}: ${countOf(item)}/${quantity}`);
+    }
   }
+}
+
+const COLLECT_TIMEOUT_MS = 45_000;
+function withTimeout(promise, ms) {
+  let t;
+  return Promise.race([
+    promise.finally(() => clearTimeout(t)),
+    new Promise((_, reject) => (t = setTimeout(() => reject(new Error(`timed out after ${ms / 1000}s`)), ms))),
+  ]);
 }
 
 async function deliver(job) {
   const target = { x: job.x, y: job.y, z: job.z };
-  await bot.pathfinder.goto(new goals.GoalNear(target.x, target.y, target.z, 2));
+  await withTimeout(bot.pathfinder.goto(new goals.GoalNear(target.x, target.y, target.z, 2)), 5 * 60_000);
   const chestBlock = bot.blockAt(new Vec3(target.x, target.y, target.z));
   if (!chestBlock || !chestBlock.name.includes("chest")) throw new Error(`no chest at ${target.x} ${target.y} ${target.z}`);
+  const before = countOf(job.item);
   const chest = await bot.openContainer(chestBlock);
   const itemType = bot.registry.itemsByName[job.item].id;
   await chest.deposit(itemType, null, job.quantity);
   chest.close();
+  await new Promise((r) => setTimeout(r, 750)); // let the server apply the window transaction
+  const moved = before - countOf(job.item);
+  // Only claim delivery when the items actually left our inventory; the Oracle double-checks the chest anyway.
+  if (moved < job.quantity) throw new Error(`deposit only moved ${moved}/${job.quantity} ${job.item}`);
 }
 
 async function work(job, resume) {
