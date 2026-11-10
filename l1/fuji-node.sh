@@ -25,6 +25,9 @@ args=(
   --log-level=info
 )
 [ -n "$SUBNET_ID" ] && args+=(--track-subnets="$SUBNET_ID")
+# Behind a NAT with no inbound access (e.g. a codespace) the node only needs outbound peers; advertising
+# 127.0.0.1 lets a signature aggregator on the same machine reach it for L1 Warp signatures.
+[ -n "${MINECHAIN_PUBLIC_IP:-}" ] && args+=(--public-ip="$MINECHAIN_PUBLIC_IP")
 
 mkdir -p "$ROOT/chain-configs"
 exec "$ROOT/bin/avalanchego" "${args[@]}"

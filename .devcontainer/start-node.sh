@@ -7,5 +7,6 @@ ROOT="$HOME/minechain-fuji"
 pkill -f "$ROOT/bin/avalanchego" 2>/dev/null && sleep 3
 SUBNET_ID=$(cat "$ROOT/subnet-id" 2>/dev/null || true)
 export MINECHAIN_IP_SERVICE="${MINECHAIN_IP_SERVICE:-opendns}"   # ifconfig.co challenges codespace IPs
+export MINECHAIN_PUBLIC_IP="${MINECHAIN_PUBLIC_IP:-127.0.0.1}"   # codespaces accept no inbound P2P
 nohup bash "$(dirname "$0")/../l1/fuji-node.sh" $SUBNET_ID > "$ROOT/node.log" 2>&1 &
 echo "Fuji node starting (subnet: ${SUBNET_ID:-none yet}); log: $ROOT/node.log"
