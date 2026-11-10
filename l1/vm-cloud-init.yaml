@@ -1,0 +1,24 @@
+#cloud-config
+# MineChain Fuji validator VM bootstrap (Ubuntu 22.04/24.04, amd64 or arm64).
+# Paste this as "user data" / "cloud-init" when creating the VM.
+#  - authorizes the operator's SSH key
+#  - sshd listens on 22 AND 443 (some networks block outbound 22)
+#  - opens 80 (TLS cert issuance), 8443 (public HTTPS RPC), 9651 (Avalanche P2P) in the host firewall
+ssh_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBlEw0Xm5gEzTD0WT55sDzydUqxaACVDr1XMW2Po1Ar minechain-vm
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-minechain-ports.conf
+    content: |
+      Port 22
+      Port 443
+
+runcmd:
+  # Ubuntu 24.04 uses socket-activated ssh, which ignores Port lines; use the plain service instead.
+  - systemctl disable --now ssh.socket || true
+  - systemctl enable ssh.service
+  - systemctl restart ssh.service
+  # Some cloud images (e.g. Oracle) ship restrictive iptables rules; allow our ports.
+  - iptables -I INPUT -p tcp -m multiport --dports 80,443,8443,9651 -j ACCEPT
+  - sh -c 'command -v netfilter-persistent >/dev/null && netfilter-persistent save || true'
+  - ufw allow 22,80,443,8443,9651/tcp || true
