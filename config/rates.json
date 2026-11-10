@@ -1,0 +1,23 @@
+{
+  "_comment": "ORE minted per block mined. Keys are vanilla block ids; the game master tracks each with a minecraft.mined scoreboard objective.",
+  "dailyCapOre": "500",
+  "rates": {
+    "coal_ore": "0.5",
+    "deepslate_coal_ore": "0.5",
+    "copper_ore": "0.5",
+    "deepslate_copper_ore": "0.5",
+    "iron_ore": "1",
+    "deepslate_iron_ore": "1",
+    "redstone_ore": "1",
+    "deepslate_redstone_ore": "1",
+    "lapis_ore": "2",
+    "deepslate_lapis_ore": "2",
+    "gold_ore": "3",
+    "deepslate_gold_ore": "3",
+    "diamond_ore": "10",
+    "deepslate_diamond_ore": "10",
+    "emerald_ore": "15",
+    "deepslate_emerald_ore": "15",
+    "ancient_debris": "25"
+  }
+}
