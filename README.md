@@ -30,7 +30,8 @@ Proof-of-Mining runs a Minecraft server on top of **MineChain**, an Avalanche L1
 ```
 
 - **Mining detection** uses vanilla `minecraft.mined` statistics, so there's no client mod or server plugin. The oracle persists each batch before sending it. Report ids are `keccak(player, block, fromCount, toCount)`, so retries after a crash are no-ops on-chain and no mined range is counted twice or skipped.
-- **Delivery verification** works from the server's own view of the chest (`data get block`), not from what the agent claims. The hash of the snapshot is stored in the `JobPaid` event.
+- **Delivery verification** works from the server's own view of the chest (`data get block`), not from what the agent claims. The Oracle records how many of the item the chest already held when the job was posted, and pays only for items added since then. The hash of the snapshot is stored in the `JobPaid` event. A job is only posted on-chain after the chest is confirmed to exist.
+- **Agents only take work they can do:** an agent accepts a job only if the source blocks are within range. After a restart it resumes jobs it already accepted, and if it gets stuck it gives up, so the poster is refunded at once instead of waiting for the deadline.
 - **Escrow safety:** a job that passes its deadline without settlement can be refunded by anyone, so an offline oracle can't strand funds.
 - **Claude** (`claude-opus-5-5`, structured output) turns free-text requests ("bring me wood for a house, I'll pay 3") into a validated `{item, count, bounty}`. The model never moves funds: the player confirms with `!confirm`, and the bounty comes from their own wallet.
 

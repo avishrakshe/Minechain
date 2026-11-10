@@ -1,6 +1,8 @@
 import mineflayer from "mineflayer";
 import { formatEther, parseEther, decodeEventLog, keccak256, toHex } from "viem";
-import { env, loadAbi } from "./config.js";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { env, loadAbi, DATA_DIR } from "./config.js";
 import { Console } from "./rcon.js";
 import { MiningOracle } from "./mining.js";
 import { parseHire } from "./llm.js";
@@ -9,6 +11,23 @@ import {
 } from "./chain.js";
 
 const STATUS = ["None", "Open", "Accepted", "Paid", "Refunded"];
+const escrowAbi = loadAbi("JobEscrow");
+
+// jobId -> count of the job's item already in the chest when the job was posted (persisted).
+const BASELINE_FILE = join(DATA_DIR, "job-baselines.json");
+mkdirSync(DATA_DIR, { recursive: true });
+const baselines = new Map(Object.entries(existsSync(BASELINE_FILE) ? JSON.parse(readFileSync(BASELINE_FILE, "utf8")) : {}));
+const saveBaselines = () => writeFileSync(BASELINE_FILE, JSON.stringify(Object.fromEntries(baselines), null, 2));
+
+function jobIdFromReceipt(receipt) {
+  for (const log of receipt.logs) {
+    try {
+      const ev = decodeEventLog({ abi: escrowAbi, data: log.data, topics: log.topics });
+      if (ev.eventName === "JobPosted") return ev.args.jobId;
+    } catch {}
+  }
+  throw new Error("JobPosted event not found in receipt");
+}
 const con = new Console();
 const gm = walletFor(gameMasterAccount());
 const { rewards, escrow, registry } = contracts(gm);
@@ -69,15 +88,21 @@ const commands = {
 
     const pos = await con.position(player);
     if (!pos) return con.tell(player, "couldn't find your position", "red");
-    const chest = { x: pos.x + 1, y: pos.y, z: pos.z };
-    await con.send(`setblock ${chest.x} ${chest.y} ${chest.z} chest keep`);
+    const chest = await placeChest(pos);
+    if (!chest) return con.tell(player, "no free space for a delivery chest next to you; move to open ground and !hire again", "red");
+
+    // Baseline: items of this type already in the chest don't count towards this job.
+    const before = await con.containerItems(chest.x, chest.y, chest.z);
+    const baseline = before.counts.get(h.item) ?? 0;
 
     const wallet = walletFor(playerAccount(player));
     const { escrow: e } = contracts(wallet);
     try {
-      const jobId = await escrow.read.jobCount();
       const hash = await e.write.post([h.item, h.count, chest.x, chest.y, chest.z, 3600n], { value: parseEther(h.bounty) });
-      await confirm(hash);
+      const receipt = await confirm(hash);
+      const jobId = jobIdFromReceipt(receipt);
+      baselines.set(jobId.toString(), baseline);
+      saveBaselines();
       await con.say(`Job #${jobId} posted by ${player}: ${h.count} ${h.item} -> chest at ${chest.x} ${chest.y} ${chest.z} for ${h.bounty} ORE`, "light_purple");
       console.log(`[job] #${jobId} posted ${txLink(hash)}`);
     } catch (err) {
@@ -120,6 +145,20 @@ const commands = {
   },
 };
 
+/**
+ * Put a delivery chest beside the player and prove it exists before any money moves.
+ * `setblock ... keep` only fills air, so it never destroys blocks or another chest's contents.
+ */
+async function placeChest(pos) {
+  const offsets = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [1, 1, 0], [-1, 1, 0], [0, 1, 1], [0, 1, -1]];
+  for (const [dx, dy, dz] of offsets) {
+    const c = { x: pos.x + dx, y: pos.y + dy, z: pos.z + dz };
+    await con.send(`setblock ${c.x} ${c.y} ${c.z} chest keep`);
+    if ((await con.containerItems(c.x, c.y, c.z)).ok) return c;
+  }
+  return null;
+}
+
 function isAgentFor(name, agentAddr) {
   const i = env.agentNames.findIndex((n) => n.toLowerCase() === name.toLowerCase());
   return i >= 0 && agentAccount(i).address.toLowerCase() === agentAddr.toLowerCase();
@@ -130,13 +169,20 @@ async function verifyAndSettle(jobId, caller) {
   if (j.status !== 2) return con.tell(caller, `job #${jobId} is ${STATUS[j.status] ?? "unknown"}`, "red");
   const { counts, raw, ok } = await con.containerItems(j.x, j.y, j.z);
   if (!ok) return con.say(`Job #${jobId}: no chest at ${j.x} ${j.y} ${j.z}`, "red");
-  const have = counts.get(j.item) ?? 0;
-  if (have < j.quantity) {
-    return con.say(`Job #${jobId}: chest has ${have}/${j.quantity} ${j.item}, not paid yet`, "yellow");
+  const baseline = baselines.get(jobId.toString());
+  if (baseline === undefined) {
+    // No recorded baseline (job posted outside this Oracle): never pay against pre-existing items.
+    return con.say(`Job #${jobId}: no delivery baseline recorded; cannot verify`, "red");
+  }
+  const delivered = (counts.get(j.item) ?? 0) - baseline;
+  if (delivered < j.quantity) {
+    return con.say(`Job #${jobId}: ${Math.max(0, delivered)}/${j.quantity} ${j.item} delivered, not paid yet`, "yellow");
   }
   const hash = await escrow.write.settle([jobId, true, keccak256(toHex(raw))]);
   await confirm(hash);
-  await con.say(`Job #${jobId} verified: ${have} ${j.item} in chest. Paid ${fmt(j.bounty)} ORE to the agent.`, "green");
+  baselines.delete(jobId.toString());
+  saveBaselines();
+  await con.say(`Job #${jobId} verified: ${delivered} new ${j.item} in chest. Paid ${fmt(j.bounty)} ORE to the agent.`, "green");
   console.log(`[job] #${jobId} paid ${txLink(hash)}`);
 }
 
