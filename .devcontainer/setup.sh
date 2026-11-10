@@ -14,7 +14,11 @@ asset_field() { # $1 = asset name, $2 = field (browser_download_url|digest); rea
   node -e "const r=JSON.parse(require('fs').readFileSync(0));const a=r.assets.find(a=>a.name===process.argv[1]);if(!a)process.exit(2);process.stdout.write(String(a[process.argv[2]]||''))" "$1" "$2"
 }
 
-rel=$(curl -fsSL "https://api.github.com/repos/ava-labs/avalanchego/releases/tags/$TAG")
+# Codespaces share egress IPs, so anonymous GitHub API calls hit the rate limit (HTTP 403); use the
+# codespace's token when present.
+auth=()
+[ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+rel=$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/ava-labs/avalanchego/releases/tags/$TAG")
 for name in "avalanchego-linux-amd64-$TAG.tar.gz" "subnet-evm-linux-amd64-$TAG.tar.gz"; do
   url=$(echo "$rel" | asset_field "$name" browser_download_url)
   digest=$(echo "$rel" | asset_field "$name" digest); digest=${digest#sha256:}
