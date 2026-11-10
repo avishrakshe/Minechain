@@ -1,0 +1,14 @@
+{
+  "network": "minechainFuji",
+  "chainId": 777333,
+  "fromBlock": 8,
+  "deployedAt": "2026-11-10T13:08:40.230Z",
+  "deployer": "0xaa6733bfc1c38ed3dabb6e9081053633d019aa69",
+  "gameMaster": "0xaA6733bfC1c38ed3DABb6e9081053633d019aA69",
+  "nativeMinterEnabled": true,
+  "contracts": {
+    "MiningRewards": "0xae10f3f8d26a0eaffc880f53112948fb09926c65",
+    "AgentRegistry": "0xb2f20edd4290daf2e5381c68bc7f4469d4473c88",
+    "JobEscrow": "0x80b97c8d627c37b7a68af6133f0f5942e13f524f"
+  }
+}

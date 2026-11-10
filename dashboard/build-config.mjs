@@ -14,7 +14,7 @@ const cfg = {
   network,
   chainId: d.chainId,
   rpcUrl,
-  explorerUrl: explorerUrl.replace(/\/$/, ""),
+  explorerUrl: explorerUrl === "-" ? "" : explorerUrl.replace(/\/$/, ""), // "-" = no explorer (some shells drop "")
   fromBlock: d.fromBlock ?? 0,
   contracts: d.contracts,
   blocks: Object.keys(rates.rates),

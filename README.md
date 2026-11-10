@@ -35,6 +35,24 @@ Proof-of-Mining runs a Minecraft server on top of **MineChain**, an Avalanche L1
 - **Escrow safety:** a job that passes its deadline without settlement can be refunded by anyone, so an offline oracle can't strand funds.
 - **An LLM** (schema-constrained structured output) turns free-text requests ("bring me wood for a house, I'll pay 3") into a validated `{item, count, bounty}`. The model never moves funds: the player confirms with `!confirm`, and the bounty comes from their own wallet.
 
+## Live on Fuji
+
+MineChain runs as a **sovereign Avalanche L1 on Fuji** (ConvertSubnetToL1, Proof-of-Authority Validator Manager in genesis).
+
+| Item | Value |
+| --- | --- |
+| Subnet ID | `2j4SbQdFev4rThHvZnBmwS89DnKzL52fPGvXY2HQf3NwTzrL1Z` |
+| Blockchain ID | `9jQgm4HWWJzvT38n4NtMEDXuFRd6AWqjEXjYXjceMDiLsTarh` |
+| EVM chain ID / gas token | `777333` / ORE |
+| ConvertSubnetToL1Tx | `2hxsXUWX6b8USfekPXJNukz4kpD7y2n9yjV9eY5KjXT1q9NeXV` |
+| Validator node | `NodeID-CBezsYF57n3oCzQT1DAqL1wt1G7NLy6Mm` |
+| MiningRewards | `0xae10f3f8d26a0eaffc880f53112948fb09926c65` (enabled on the NativeMinter precompile) |
+| AgentRegistry | `0xb2f20edd4290daf2e5381c68bc7f4469d4473c88` |
+| JobEscrow | `0x80b97c8d627c37b7a68af6133f0f5942e13f524f` |
+| Public RPC | `https://minechain-fuji-97xvrvw57gxqfx9v5-9650.app.github.dev/ext/bc/9jQgm4HWWJzvT38n4NtMEDXuFRd6AWqjEXjYXjceMDiLsTarh/rpc` (live while the validator codespace runs) |
+
+The validator runs in a GitHub Codespace (`.devcontainer/`): it installs pinned, checksum-verified AvalancheGo + Subnet-EVM v1.15.3 and starts a partial-sync Fuji node tracking MineChain (`l1/fuji-node.sh`). `l1/fuji-api-proxy.mjs` gives avalanche-cli one endpoint that serves P-Chain calls the public API has dropped (e.g. `platform.getBalance`) from our own node.
+
 ## Repository
 
 | Path | What |

@@ -12,8 +12,9 @@ const ALLOW_LIST_ABI = [
 async function main() {
   const net = hre.network.name;
   // hardhat-viem only knows chains bundled with viem; describe MineChain explicitly.
+  const isMineChain = net.startsWith("minechain");
   const chain =
-    net === "minechain"
+    isMineChain
       ? defineChain({
           id: Number(process.env.MINECHAIN_CHAIN_ID ?? 777333),
           name: "MineChain",
@@ -25,6 +26,7 @@ async function main() {
   const [deployer] = await hre.viem.getWalletClients(chain ? { chain } : undefined);
   const client = { public: publicClient, wallet: deployer };
   const chainId = await publicClient.getChainId();
+  const fromBlock = Number(await publicClient.getBlockNumber());
   const gameMaster = getAddress((process.env.GAME_MASTER_ADDRESS ?? deployer.account.address) as Address);
 
   const cfg = JSON.parse(readFileSync(join(__dirname, "../../config/rates.json"), "utf8"));
@@ -49,8 +51,7 @@ async function main() {
   // On MineChain the NativeMinter precompile exists; grant mint rights to MiningRewards only.
   let minterEnabled = false;
   const precompileCode = await publicClient.getCode({ address: NATIVE_MINTER });
-  const isSubnetEvm = net === "minechain";
-  if (isSubnetEvm) {
+  if (isMineChain) {
     const hash = await deployer.writeContract({
       address: NATIVE_MINTER,
       abi: ALLOW_LIST_ABI,
@@ -73,6 +74,7 @@ async function main() {
   const out = {
     network: net,
     chainId,
+    fromBlock,
     deployedAt: new Date().toISOString(),
     deployer: deployer.account.address,
     gameMaster,

@@ -29,6 +29,14 @@ const config: HardhatUserConfig = {
       chainId: process.env.MINECHAIN_CHAIN_ID ? Number(process.env.MINECHAIN_CHAIN_ID) : undefined,
       accounts,
     },
+    // MineChain L1 on Fuji (Subnet 2j4SbQdF…, blockchain 9jQgm4HW…). RPC from the validator node.
+    minechainFuji: {
+      url:
+        process.env.MINECHAIN_FUJI_RPC_URL ??
+        "http://127.0.0.1:9650/ext/bc/9jQgm4HWWJzvT38n4NtMEDXuFRd6AWqjEXjYXjceMDiLsTarh/rpc",
+      chainId: 777333,
+      accounts,
+    },
   },
 };
 

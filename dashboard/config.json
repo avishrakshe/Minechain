@@ -1,13 +1,13 @@
 {
-  "network": "",
+  "network": "Fuji L1",
   "chainId": 777333,
-  "rpcUrl": "http://127.0.0.1:9654/ext/bc/2UcbeFnWZh9f4pkNfEQEz71q7WdNThTQg7nyz4A39BRg4xqJbr/rpc",
-  "explorerUrl": "local",
-  "fromBlock": 0,
+  "rpcUrl": "https://minechain-fuji-97xvrvw57gxqfx9v5-9650.app.github.dev/ext/bc/9jQgm4HWWJzvT38n4NtMEDXuFRd6AWqjEXjYXjceMDiLsTarh/rpc",
+  "explorerUrl": "",
+  "fromBlock": 8,
   "contracts": {
-    "MiningRewards": "0xa7a4a6dc9965dee3899826c2e8e4de12ea317865",
-    "AgentRegistry": "0x9b324ac6c6e02ca3c3a8ccccf032edc08d8318ab",
-    "JobEscrow": "0xae10f3f8d26a0eaffc880f53112948fb09926c65"
+    "MiningRewards": "0xae10f3f8d26a0eaffc880f53112948fb09926c65",
+    "AgentRegistry": "0xb2f20edd4290daf2e5381c68bc7f4469d4473c88",
+    "JobEscrow": "0x80b97c8d627c37b7a68af6133f0f5942e13f524f"
   },
   "blocks": [
     "coal_ore",
