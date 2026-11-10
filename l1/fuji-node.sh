@@ -19,8 +19,9 @@ args=(
   # Behind a port forwarder (e.g. Codespaces' public URL) requests arrive with a non-localhost Host header.
   --http-allowed-hosts=*
   --staking-port=9651
-  # UDP DNS to OpenDNS doesn't leave WSL's NAT; the HTTP-based lookup does.
-  --public-ip-resolution-service=ifconfigCo
+  # Which lookup works depends on the network: UDP DNS (opendns) was blocked on the dev laptop,
+  # while ifconfig.co serves a bot challenge to cloud/codespace IPs. Override with MINECHAIN_IP_SERVICE.
+  --public-ip-resolution-service="${MINECHAIN_IP_SERVICE:-ifconfigCo}"
   --log-level=info
 )
 [ -n "$SUBNET_ID" ] && args+=(--track-subnets="$SUBNET_ID")
