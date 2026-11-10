@@ -19,15 +19,18 @@ args=(
   # Behind a port forwarder (e.g. Codespaces' public URL) requests arrive with a non-localhost Host header.
   --http-allowed-hosts=*
   --staking-port=9651
-  # Which lookup works depends on the network: UDP DNS (opendns) was blocked on the dev laptop,
-  # while ifconfig.co serves a bot challenge to cloud/codespace IPs. Override with MINECHAIN_IP_SERVICE.
-  --public-ip-resolution-service="${MINECHAIN_IP_SERVICE:-ifconfigCo}"
   --log-level=info
 )
 [ -n "$SUBNET_ID" ] && args+=(--track-subnets="$SUBNET_ID")
-# Behind a NAT with no inbound access (e.g. a codespace) the node only needs outbound peers; advertising
-# 127.0.0.1 lets a signature aggregator on the same machine reach it for L1 Warp signatures.
-[ -n "${MINECHAIN_PUBLIC_IP:-}" ] && args+=(--public-ip="$MINECHAIN_PUBLIC_IP")
+if [ -n "${MINECHAIN_PUBLIC_IP:-}" ]; then
+  # Behind a NAT with no inbound access (e.g. a codespace) the node only needs outbound peers; advertising
+  # 127.0.0.1 lets a signature aggregator on the same machine reach it for L1 Warp signatures.
+  args+=(--public-ip="$MINECHAIN_PUBLIC_IP")
+else
+  # Which lookup works depends on the network: UDP DNS (opendns) was blocked on the dev laptop,
+  # while ifconfig.co serves a bot challenge to cloud/codespace IPs. Override with MINECHAIN_IP_SERVICE.
+  args+=(--public-ip-resolution-service="${MINECHAIN_IP_SERVICE:-ifconfigCo}")
+fi
 
 mkdir -p "$ROOT/chain-configs"
 exec "$ROOT/bin/avalanchego" "${args[@]}"
