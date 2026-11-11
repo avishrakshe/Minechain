@@ -7,7 +7,7 @@
     "gm": "node src/gamemaster.js",
     "agent": "node src/agent.js"
   },
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",

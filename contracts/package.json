@@ -8,7 +8,7 @@
     "deploy:local": "hardhat run scripts/deploy.ts --network minechain",
     "deploy:fuji": "hardhat run scripts/deploy.ts --network minechainFuji"
   },
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",

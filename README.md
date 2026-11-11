@@ -182,3 +182,7 @@ Against a running setup, `game/scripts/smoke-chain.js` runs a full issuance + es
 ## Built during Avalanche Speedrun
 
 There is no prior work: everything in this repository was written during Avalanche Speedrun.
+
+## License
+
+[MIT](LICENSE)
