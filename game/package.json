@@ -1,15 +1,12 @@
 {
-  "name": "game",
+  "name": "minechain-game",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "MineChain oracle (game master) and AI worker agents for a Minecraft server",
   "scripts": {
     "test": "node --test test/*.test.js",
     "gm": "node src/gamemaster.js",
     "agent": "node src/agent.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
@@ -25,5 +22,6 @@
   },
   "devDependencies": {
     "@avalabs/avalanchejs": "^5.2.0"
-  }
+  },
+  "private": true
 }
